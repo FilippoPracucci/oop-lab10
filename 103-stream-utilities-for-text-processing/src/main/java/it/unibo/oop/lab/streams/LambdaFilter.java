@@ -6,7 +6,6 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.LayoutManager;
 import java.awt.Toolkit;
-import java.util.function.Function;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -14,6 +13,10 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
+
+import java.util.Arrays;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Modify this small program adding new filters.
@@ -34,11 +37,26 @@ public final class LambdaFilter extends JFrame {
 
     private static final long serialVersionUID = 1760990730218643730L;
 
+    private static final String ANY_NON_WORD = "(\\s|\\p{Punct})+";
+
     private enum Command {
         /**
          * Commands.
          */
-        IDENTITY("No modifications", Function.identity());
+        IDENTITY("No modifications", Function.identity()),
+        TO_LOWER_CASE("String to lower case", String::toLowerCase),
+        N_CHARS("Number of chars", s -> Integer.toString(s.length() - 1)),
+        N_LINES("Number of lines", s -> Long.toString(s.lines().count())),
+        ORDERED("Words oredered", s -> 
+            Arrays.stream(s.split(ANY_NON_WORD)).sorted()
+                .collect(Collectors.joining("\n"))
+        ),
+        WORD_COUNT("Count for each word", s ->
+            Arrays.stream(s.split(ANY_NON_WORD)).collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+                .entrySet().stream()
+                .map(w -> w.getKey() + " -> " + w.getValue())
+                .collect(Collectors.joining("\n"))
+        );
 
         private final String commandName;
         private final Function<String, String> fun;
